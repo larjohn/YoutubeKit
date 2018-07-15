@@ -7,7 +7,7 @@
 //
 import UIKit
 import WebKit
-
+import Foundation
 /**
  * `YTSwiftyPlayer` is a subclass of `WKWebView` that support fully Youtube IFrame API.
  * It can be instantiated only programmatically.
@@ -246,6 +246,34 @@ open class YTSwiftyPlayer: WKWebView {
             let html = htmlString?.replacingOccurrences(of: "%@", with: jsonString) else { return }
         
         loadHTMLString(html, baseURL: nil)
+    }
+    
+    public func loadPlayerAlternative(playerURL: String) {
+   
+        let events: [String: AnyObject] = {
+            var registerEvents: [String: AnyObject] = [:]
+            callbackHandlers.forEach {
+                registerEvents[$0.rawValue] = $0.rawValue as AnyObject
+            }
+            return  registerEvents
+        }()
+        
+        var parameters = [
+            "width": "100%" as AnyObject,
+            "height": "100%" as AnyObject,
+            "events": events as AnyObject,
+            "playerVars": playerVars as AnyObject,
+            ]
+        
+        if let videoID = playerVars["videoId"] {
+            parameters["videoId"] = videoID
+        }
+        
+        let json = try! JSONSerialization.data(withJSONObject: parameters, options: [])
+            let jsonString = String(data: json, encoding: String.Encoding.utf8)
+            let url = URL(string: "\(playerURL)?vars=\(jsonString!.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)")
+            load(URLRequest(url: url!))
+        
     }
     
     // MARK: - Private Methods
